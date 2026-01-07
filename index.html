@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>期末考試大螢幕看板</title>
+    <style>
+        :root {
+            --bg-a: #FFF9E3; /* 米黃色 */
+            --bg-b: #FFF0F5; /* 極淺粉色 */
+            --bg-c: #000000; /* 深黑色 */
+            --subject-blue: #0000FF;
+            --time-black: #000000;
+            --highlight-gradient: linear-gradient(180deg, #FFF176 0%, #FFD600 100%);
+        }
+
+        * { box-sizing: border-box; font-family: "Microsoft JhengHei", "Heiti TC", sans-serif; }
+        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background: #000; }
+
+        .main-container { display: flex; flex-direction: column; height: 100vh; }
+
+        /* C區：上方 1/3 */
+        #section-c {
+            height: 33.33vh;
+            background-color: var(--bg-c);
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            border-bottom: 3px solid #333;
+            padding: 0 30px;
+        }
+
+        /* C區左方：時間與調整鈕 (2/3 寬度) */
+        .clock-wrapper {
+            width: 60%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        #digital-clock {
+            font-size: 11vw;
+            font-weight: bold;
+            color: #ffffff; /* 調整為白色 */
+            line-height: 1;
+            font-family: 'Courier New', monospace;
+        }
+        .time-btns {
+            margin-top: 15px;
+            display: flex;
+            gap: 12px;
+        }
+        .time-btns button {
+            background: #333; color: #fff; border: 1px solid #555;
+            padding: 6px 14px; cursor: pointer; border-radius: 4px; font-size: 1vw;
+        }
+        .time-btns button:hover { background: #555; }
+
+        /* C區右方：進度條 (更長、更粗) */
+        .progress-wrapper {
+            width: 40%;
+            padding: 0 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .progress-bar-container {
+            width: 95%; /* 讓進度條更長 */
+            height: 80px; /* 讓進度條更粗 */
+            background: #222;
+            border-radius: 40px;
+            overflow: hidden;
+            border: 4px solid #444;
+            position: relative;
+        }
+        #progress-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: #00FF00; /* 亮綠色起始 */
+            transition: width 1s linear, background-color 0.5s;
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.5); /* 增加發光感 */
+        }
+        #status-label {
+            margin-top: 15px;
+            font-size: 2vw;
+            font-weight: bold;
+            color: #ffffff;
+        }
+
+        /* 下方區域：2/3 */
+        .bottom-half { height: 66.66vh; display: flex; }
+
+        /* A區：左側 1/2 */
+        #section-a {
+            width: 50%;
+            background-color: var(--bg-a);
+            display: flex;
+            flex-direction: column;
+            border-right: 2px solid #000;
+        }
+        .exam-slots {
+            height: 66.66%;
+            display: flex;
+            flex-direction: column;
+        }
+        .exam-item {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            padding: 0 25px;
+            border-bottom: 2px solid #e0d8b0;
+            transition: background 0.5s;
+        }
+        .exam-item.active {
+            background: var(--highlight-gradient) !important;
+        }
+        .subject-input {
+            font-size: 4.5vw;
+            color: var(--subject-blue);
+            font-weight: bold;
+            border: none;
+            background: transparent;
+            width: 45%;
+            outline: none;
+        }
+        .time-label {
+            font-size: 3.5vw;
+            color: var(--time-black);
+            font-weight: bold;
+            margin-left: auto;
+        }
+
+        .attendance-box {
+            height: 33.33%;
+            padding: 20px;
+            font-size: 2.2vw;
+            border-top: 3px solid #000;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            align-items: center;
+        }
+        .attendance-box input {
+            font-size: 1.8vw;
+            padding: 4px;
+            width: 120px;
+            border: 1px solid #ccc;
+        }
+
+        /* B區：右側 1/2 */
+        #section-b {
+            width: 50%;
+            background-color: var(--bg-b);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            text-align: center;
+        }
+        #reminder-text {
+            font-size: 5vw;
+            font-weight: bold;
+            line-height: 1.4;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+
+<div class="main-container">
+    <div id="section-c">
+        <div class="clock-wrapper">
+            <div id="digital-clock">00:00:00</div>
+            <div class="time-btns">
+                <button onclick="changeTime(3600)">時+</button>
+                <button onclick="changeTime(-3600)">時-</button>
+                <button onclick="changeTime(60)">分+</button>
+                <button onclick="changeTime(-60)">分-</button>
+                <button onclick="changeTime(1)">秒+</button>
+                <button onclick="changeTime(-1)">秒-</button>
+            </div>
+        </div>
+        <div class="progress-wrapper">
+            <div class="progress-bar-container">
+                <div id="progress-bar-fill"></div>
+            </div>
+            <div id="status-label">準備中</div>
+        </div>
+    </div>
+
+    <div class="bottom-half">
+        <div id="section-a">
+            <div class="exam-slots">
+                <div class="exam-item" id="slot-0">
+                    <input type="text" class="subject-input" id="inp-0" placeholder="輸入科目" oninput="save()">
+                    <span class="time-label">08:45 ~ 09:25</span>
+                </div>
+                <div class="exam-item" id="slot-1">
+                    <input type="text" class="subject-input" id="inp-1" placeholder="輸入科目" oninput="save()">
+                    <span class="time-label">09:35 ~ 10:15</span>
+                </div>
+                <div class="exam-item" id="slot-2">
+                    <input type="text" class="subject-input" id="inp-2" placeholder="輸入科目" oninput="save()">
+                    <span class="time-label">10:30 ~ 11:10</span>
+                </div>
+            </div>
+            <div class="attendance-box">
+                <div>應到：<input type="number" id="att-1" oninput="save()"></div>
+                <div>實到：<input type="number" id="att-2" oninput="save()"></div>
+                <div style="grid-column: span 2;">未到：<input type="text" id="att-3" style="width: 70%" placeholder="輸入座號或姓名" oninput="save()"></div>
+            </div>
+        </div>
+
+        <div id="section-b">
+            <div id="reminder-text">祝同學考試順利</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let offset = 0; // 秒
+
+    const EXAMS = [
+        { s: "08:45", e: "09:25" },
+        { s: "09:35", e: "10:15" },
+        { s: "10:30", e: "11:10" }
+    ];
+
+    const REMINDERS = [
+        { t: [["08:44","08:45"],["09:34","09:35"],["10:29","10:30"]], m: ["預備鐘已響，請安靜，準備考試。"] },
+        { t: [["08:45","08:47"],["09:35","09:47"],["10:30","10:32"]], m: ["考卷記得寫：班級座號姓名", "有問題舉手問老師", "需要撿東西，請監考老師幫忙"] },
+        { t: [["09:22","09:25"]], m: ["考試即將結束，請再檢查", "題目卷與答案卷分開收，題目卷請名字朝外對摺"] },
+        { t: [["10:12","10:15"],["11:07","11:10"]], m: ["考試即將結束，請再檢查"] },
+        { t: [["09:25","09:26"],["10:15","10:16"]], m: ["等監考老師點完再離開座位下課", "記得上廁所", "預備鐘響完請收拾位置坐好"] },
+        { t: [["11:10","11:11"]], m: ["等監考老師點完再離開座位下課", "今日考試結束，請恢復座位"] }
+    ];
+
+    function changeTime(s) { offset += s; }
+
+    function save() {
+        [0,1,2].forEach(i => localStorage.setItem('sub-'+i, document.getElementById('inp-'+i).value));
+        [1,2,3].forEach(i => localStorage.setItem('att-'+i, document.getElementById('att-'+i).value));
+    }
+
+    function parseSec(t) { const [h,m] = t.split(':').map(Number); return h*3600 + m*60; }
+
+    function update() {
+        const d = new Date();
+        d.setSeconds(d.getSeconds() + offset);
+        const cur = d.getHours()*3600 + d.getMinutes()*60 + d.getSeconds();
+        
+        // C區：時間改為白色
+        document.getElementById('digital-clock').innerText = d.toTimeString().split(' ')[0];
+
+        // A區高亮 & C區進度條
+        let active = null;
+        EXAMS.forEach((ex, i) => {
+            const start = parseSec(ex.s), end = parseSec(ex.e);
+            const el = document.getElementById('slot-'+i);
+            if(cur >= start && cur < end) {
+                el.classList.add('active');
+                active = { start, end };
+            } else {
+                el.classList.remove('active');
+            }
+        });
+
+        const bar = document.getElementById('progress-bar-fill');
+        const lab = document.getElementById('status-label');
+        if(active) {
+            const total = active.end - active.start;
+            const elapsed = cur - active.start;
+            const remain = active.end - cur;
+            const pct = (elapsed / total) * 100;
+            bar.style.width = pct + "%";
+
+            if(remain <= 600) { 
+                bar.style.backgroundColor = "#FF0000"; // 紅色
+                bar.style.boxShadow = "0 0 15px rgba(255, 0, 0, 0.5)";
+                lab.innerText = "考試即將結束"; 
+            }
+            else if(elapsed >= total/2) { 
+                bar.style.backgroundColor = "#FFFF00"; // 黃色
+                bar.style.boxShadow = "0 0 15px rgba(255, 255, 0, 0.5)";
+                lab.innerText = "時間過了一半"; 
+            }
+            else { 
+                bar.style.backgroundColor = "#00FF00"; // 亮綠色
+                bar.style.boxShadow = "0 0 15px rgba(0, 255, 0, 0.5)";
+                lab.innerText = "考試進行中"; 
+            }
+        } else {
+            bar.style.width = "0%"; lab.innerText = "非考試時段";
+            bar.style.boxShadow = "none";
+        }
+
+        // B區：輪播
+        let group = null;
+        for(let r of REMINDERS) {
+            if(r.t.some(range => cur >= parseSec(range[0]) && cur < parseSec(range[1]))) {
+                group = r; break;
+            }
+        }
+        
+        const bRem = document.getElementById('reminder-text');
+        if(group) {
+            const idx = Math.floor(Date.now() / 5000) % group.m.length;
+            const msg = group.m[idx];
+            bRem.innerHTML = msg.replace(/([，、：。])/g, "$1<br>");
+        } else {
+            bRem.innerHTML = "專心致志<br>發揮實力";
+        }
+    }
+
+    // 載入存檔
+    [0,1,2].forEach(i => document.getElementById('inp-'+i).value = localStorage.getItem('sub-'+i) || "");
+    [1,2,3].forEach(i => document.getElementById('att-'+i).value = localStorage.getItem('att-'+i) || "");
+
+    setInterval(update, 1000);
+    update();
+</script>
+</body>
+</html>
